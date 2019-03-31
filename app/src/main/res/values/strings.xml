@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">MBanking</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_user">User</string>
+    <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
+    <string name="turn_on_flashlight">Turn on Flashlight</string>
+    <string name="notif_qr">Arahkan kode QR ke area yang telah ditentukan</string>
+    <string name="menu_addcustomer">Tambah Customer</string>
+    <string name="menu_writetransaction">Catat Transaksi</string>
+</resources>
