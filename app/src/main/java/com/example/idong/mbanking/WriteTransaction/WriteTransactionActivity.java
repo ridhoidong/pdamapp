@@ -126,7 +126,7 @@ public class WriteTransactionActivity extends AppCompatActivity implements View.
 
         if (!mediaStorageDir.exists()){
             if (!mediaStorageDir.mkdirs()){
-                Log.d( "Oops! Failed create ", "Sorry");
+                Log.d( "Oops! Failed create ", "Sorry Coba Lagi");
                 return null;
             }
         }
