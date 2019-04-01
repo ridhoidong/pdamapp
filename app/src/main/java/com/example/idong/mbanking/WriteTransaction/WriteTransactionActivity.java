@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.idong.mbanking.BuildConfig;
 import com.example.idong.mbanking.R;
 import com.example.idong.mbanking.util.AppUtil;
 import com.makeramen.roundedimageview.RoundedImageView;
@@ -112,32 +113,11 @@ public class WriteTransactionActivity extends AppCompatActivity implements View.
         Uri outputFileUri = null;
         File getImage = getExternalCacheDir();
         if (getImage != null) {
-//            outputFileUri = Uri.fromFile(new File(getImage.getPath()));
-            outputFileUri = FileProvider.getUriForFile(WriteTransactionActivity.this, getPackageName()+".fileprovider", new File(getImage.getPath()));
+            outputFileUri = FileProvider.getUriForFile(WriteTransactionActivity.this, BuildConfig.APPLICATION_ID + ".provider", new File(getImage.getPath(), "fotometer.png"));
         }
         return outputFileUri;
     }
 
-
-    private Uri getOutputMediaFile(){
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        Uri outputFileUri = null;
-        File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), "FotoMeter");
-
-        if (!mediaStorageDir.exists()){
-            if (!mediaStorageDir.mkdirs()){
-                Log.d( "Oops! Failed create ", "Sorry Coba Lagi");
-                return null;
-            }
-        }
-
-//        File getImage = getExternalCacheDir();
-        if (mediaStorageDir != null) {
-            outputFileUri = FileProvider.getUriForFile(WriteTransactionActivity.this, getPackageName()+".fileprovider", new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_"+ timeStamp + ".jpg"));
-        }
-        return outputFileUri;
-    }
 
     private static final int MY_CAMERA_REQUEST_CODE = 100;
     public void checkCameraPermission()
@@ -147,8 +127,9 @@ public class WriteTransactionActivity extends AppCompatActivity implements View.
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
                     MY_CAMERA_REQUEST_CODE);
         } else {
-            Uri outputFileUri = getOutputMediaFile();
+            Uri outputFileUri = getCaptureImageOutputUri();
             Intent captureIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+            captureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
             startActivityForResult(captureIntent, TAKE_PICTURE);
         }
@@ -162,7 +143,7 @@ public class WriteTransactionActivity extends AppCompatActivity implements View.
         {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 AppUtil.showToastLong(this, "Camera Permission Granted");
-                Uri outputFileUri = getOutputMediaFile();
+                Uri outputFileUri = getCaptureImageOutputUri();
                 Intent captureIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                 captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
                 startActivityForResult(captureIntent, TAKE_PICTURE);
@@ -176,25 +157,20 @@ public class WriteTransactionActivity extends AppCompatActivity implements View.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK){
+        if (resultCode == Activity.RESULT_OK) {
             if (getPickImageResultUri(data) != null) {
-                try {
-                    uri = getPickImageResultUri(data);
-                    if (requestCode == TAKE_PICTURE) {
-//                        Bundle extras = data.getExtras();
-//                        bitmap = (Bitmap) extras.get("data");
-//                        InputStream is = new URL(uri.getPath()).openStream();
-                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-
-                    } else {
-                        bitmap = MediaStore.Images.Media.getBitmap(WriteTransactionActivity.this.getContentResolver(), uri);
+                uri = getPickImageResultUri(data);
+                Log.d("URI" , String.valueOf(uri));
+                    try {
+                        bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+                        bitmap = getResizedBitmap(bitmap, 500);
+                        bitmap = rotateImageIfRequired(bitmap, uri);
+                    } catch (Exception e) {
+                        Log.d("WKWKWK", e.getMessage());
+                        e.printStackTrace();
                     }
-                    bitmap = getResizedBitmap(bitmap, 500);
-                    ll_photopreview.setVisibility(View.VISIBLE);
-                    iv_photopreview.setImageBitmap(bitmap);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                ll_photopreview.setVisibility(View.VISIBLE);
+                iv_photopreview.setImageBitmap(bitmap);
             }
         }
 
@@ -206,8 +182,7 @@ public class WriteTransactionActivity extends AppCompatActivity implements View.
             String action = data.getAction();
             isCamera = action != null && action.equals(MediaStore.ACTION_IMAGE_CAPTURE);
         }
-
-        return isCamera ? getOutputMediaFile() : data.getData();
+        return isCamera ? getCaptureImageOutputUri() : data.getData();
     }
 
     public Bitmap getResizedBitmap(Bitmap image, int maxSize) {
@@ -225,11 +200,18 @@ public class WriteTransactionActivity extends AppCompatActivity implements View.
         return Bitmap.createScaledBitmap(image, width, height, true);
     }
 
-    private static Bitmap rotateImageIfRequired(Bitmap img, Uri selectedImage) throws IOException {
-        ExifInterface ei = new ExifInterface(selectedImage.getPath());
+    private static Bitmap rotateImageIfRequired(Bitmap img, Uri selectedImage){
+        ExifInterface ei = null;
+        try {
+            ei = new ExifInterface(selectedImage.getPath());
+        } catch (IOException e) {
+            Log.d("YYY", e.getMessage());
+            e.printStackTrace();
+        }
         int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-
+        Log.d("ORIENTATION", "EA");
         switch (orientation) {
+
             case ExifInterface.ORIENTATION_ROTATE_90:
                 return rotateImage(img, 90);
             case ExifInterface.ORIENTATION_ROTATE_180:
