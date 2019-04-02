@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://E:\PROJECT EXT\pdamapp\MBanking.iml" filepath="E:\PROJECT EXT\pdamapp\MBanking.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://E:\PROJECT EXT\pdamapp\app\app.iml" filepath="E:\PROJECT EXT\pdamapp\app\app.iml" />
       <module fileurl="file://$PROJECT_DIR$/pdamapp.iml" filepath="$PROJECT_DIR$/pdamapp.iml" />
     </modules>
   </component>
